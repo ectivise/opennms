@@ -127,7 +127,9 @@
     <property name="staticMethod"><value>org.opennms.netmgt.config.SnmpPeerFactory.init</value></property>
   </bean>
 
-  <bean id="snmpPeerFactory" class="org.opennms.netmgt.config.SnmpPeerFactory" depends-on="snmpPeerFactory-init" factory-method="getInstance"/>
+  <bean id="snmpPeerFactory" class="org.opennms.netmgt.config.SnmpPeerFactory" depends-on="snmpPeerFactory-init"
+        factory-method="getInstance">
+  </bean>
 
   <onmsgi:service interface="org.opennms.netmgt.config.api.SnmpAgentConfigFactory" ref="snmpPeerFactory"/>
   
