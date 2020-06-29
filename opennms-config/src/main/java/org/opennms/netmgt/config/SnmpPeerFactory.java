@@ -69,6 +69,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.googlecode.concurentlocks.ReadWriteUpdateLock;
 import com.googlecode.concurentlocks.ReentrantReadWriteUpdateLock;
@@ -94,7 +95,7 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
 
     private static final int VERSION_UNSPECIFIED = -1;
     private static final String SNMP_ENCRYPTION_CONTEXT = "snmp-config";
-    private static final String ENABLE_ENCRYPTION = "org.opennms.snmp.encryption.enabled";
+    protected static final String ENABLE_ENCRYPTION = "org.opennms.snmp.encryption.enabled";
     private static final String ENCRYPTION_KEY = "org.opennms.snmp.encryption.key";
 
     private static File s_configFile;
@@ -642,6 +643,7 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
                 definition.setPrivacyPassphrase(privPassPhrase);
             }
         });
+        decrypted.set(false);
     }
 
     private void decryptConfig(SnmpConfig snmpConfig) {
@@ -682,4 +684,8 @@ public class SnmpPeerFactory implements SnmpAgentConfigFactory {
         decrypted.set(true);
     }
 
+    @VisibleForTesting
+    protected Boolean getEncryptionEnabled() {
+        return encryptionEnabled;
+    }
 }
