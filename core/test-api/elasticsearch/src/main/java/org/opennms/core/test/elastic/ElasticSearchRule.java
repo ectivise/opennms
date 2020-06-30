@@ -130,4 +130,8 @@ public class ElasticSearchRule implements TestRule {
     public String getUrl() {
         return String.format("http://localhost:%s", ES_HTTP_PORT);
     }
+
+    public String getHttpsUrl() {
+        return String.format("https://localhost:%s", ES_HTTP_PORT);
+    }
 }

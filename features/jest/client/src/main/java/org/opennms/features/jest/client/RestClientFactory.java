@@ -31,6 +31,11 @@ package org.opennms.features.jest.client;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,10 +46,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.nio.conn.SchemeIOSessionStrategy;
+import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.opennms.features.jest.client.credentials.CredentialsParser;
 import org.opennms.features.jest.client.credentials.CredentialsProvider;
 import org.opennms.features.jest.client.executors.LimitedRetriesRequestExecutor;
@@ -297,5 +311,27 @@ public class RestClientFactory {
 			return new ArrayList<>(endpoints);
 		}
 		return Collections.emptyList();
+	}
+
+	public void setIgnoreCertificates(boolean ignoreCertificates) {
+		if(!ignoreCertificates) {
+			return;
+		}
+		try {
+			SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+				public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+					return true;
+				}
+			}).build();
+			HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
+
+			SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
+			SchemeIOSessionStrategy httpsIOSessionStrategy = new SSLIOSessionStrategy(sslContext, hostnameVerifier);
+			clientConfigBuilder.defaultSchemeForDiscoveredNodes("https");
+			clientConfigBuilder.sslSocketFactory(sslSocketFactory);
+			clientConfigBuilder.httpIOSessionStrategy(httpsIOSessionStrategy);
+		} catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+			LOG.error("Exception while setting Ignore certificates", e);
+		}
 	}
 }
